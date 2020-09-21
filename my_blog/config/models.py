@@ -1,13 +1,8 @@
 from django.db import models
+from django.template.loader import render_to_string
 
 
 class SideBar(models.Model):
-    STATUS_SHOW = 1
-    STATUS_HIDE = 0
-    STATUS_ITEMS = (
-        (STATUS_HIDE, '隐藏'),
-        (STATUS_SHOW, '展示'),
-    )
     SIDE_TYPE = (
         (1, 'HTML'),
         (2, '最新文章'),
@@ -19,3 +14,23 @@ class SideBar(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = '侧边栏'
+
+    def content_html(self):
+        from blog.models import ArticlePost
+        result = ''
+        if self.display_type == 1:
+            result = self.contents
+        elif self.display_type == 2:
+            context = {
+                'posts': ArticlePost.latest_posts()
+            }
+            result = render_to_string('config/blocks/sidebar_posts.html', context)
+        elif self.display_type == 3:
+            context = {
+                'posts': ArticlePost.host_posts()
+            }
+            result = render_to_string('config/blocks/sidebar_posts.html', context)
+        return result
+
+    def __str__(self):
+        return self.title
